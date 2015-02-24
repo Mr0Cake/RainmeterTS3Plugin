@@ -1,0 +1,5 @@
+D:\Downloads\rainmeter-plugin-sdk-master\C#\PluginEmpty\obj\x86\Debug\PluginEmpty.csprojResolveAssemblyReference.cache
+D:\Downloads\rainmeter-plugin-sdk-master\C#\PluginEmpty\x32\Debug\RainTS3.dll
+D:\Downloads\rainmeter-plugin-sdk-master\C#\PluginEmpty\x32\Debug\RainTS3.pdb
+D:\Downloads\rainmeter-plugin-sdk-master\C#\PluginEmpty\obj\x86\Debug\RainTS3.dll
+D:\Downloads\rainmeter-plugin-sdk-master\C#\PluginEmpty\obj\x86\Debug\RainTS3.pdb
