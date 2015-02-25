@@ -162,7 +162,7 @@ namespace PluginEmpty
 
         private void Notifications_MessageReceived(object sender, TS3QueryLib.Core.Server.Notification.EventArgs.MessageReceivedEventArgs e)
         {
-            updateOutput();
+            TextMessage = e.InvokerNickname + ":\r\n" + e.Message;
         }
 
         private void QueryDispatcher_ServerClosedConnection(object sender, System.EventArgs e)

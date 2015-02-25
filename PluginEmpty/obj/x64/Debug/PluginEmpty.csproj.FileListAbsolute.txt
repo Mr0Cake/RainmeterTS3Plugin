@@ -3,3 +3,8 @@ D:\Downloads\rainmeter-plugin-sdk-master\C#\PluginEmpty\x64\Debug\RainTS3.dll
 D:\Downloads\rainmeter-plugin-sdk-master\C#\PluginEmpty\x64\Debug\RainTS3.pdb
 D:\Downloads\rainmeter-plugin-sdk-master\C#\PluginEmpty\obj\x64\Debug\RainTS3.dll
 D:\Downloads\rainmeter-plugin-sdk-master\C#\PluginEmpty\obj\x64\Debug\RainTS3.pdb
+D:\kevin\Documents\GitHub\TS3QueryLibRainmeter\PluginEmpty\x64\Debug\RainTS3.dll
+D:\kevin\Documents\GitHub\TS3QueryLibRainmeter\PluginEmpty\x64\Debug\RainTS3.pdb
+D:\kevin\Documents\GitHub\TS3QueryLibRainmeter\PluginEmpty\obj\x64\Debug\PluginEmpty.csprojResolveAssemblyReference.cache
+D:\kevin\Documents\GitHub\TS3QueryLibRainmeter\PluginEmpty\obj\x64\Debug\RainTS3.dll
+D:\kevin\Documents\GitHub\TS3QueryLibRainmeter\PluginEmpty\obj\x64\Debug\RainTS3.pdb

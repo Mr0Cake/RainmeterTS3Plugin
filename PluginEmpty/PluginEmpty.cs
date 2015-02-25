@@ -74,7 +74,7 @@ namespace PluginEmpty
             if (teamspeakConnection.Connected == TeamspeakConnectionThread.ConnectionState.Connected)
             {
                  output = teamspeakConnection.ChannelName +
-                    "\r\n" + teamspeakConnection.ChannelClients +
+                    "\r\n\r\n" + teamspeakConnection.ChannelClients +
                     "\r\n" + teamspeakConnection.WhoIsTalking +
                     "\r\n\r\n" + teamspeakConnection.TextMessage;
             }
