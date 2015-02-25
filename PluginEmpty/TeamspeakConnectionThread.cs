@@ -173,6 +173,7 @@ namespace PluginEmpty
             ChannelClients = "";
             WhoIsTalking = "";
             TextMessage = "";
+            talking.Clear();
         }
 
         private void QueryDispatcher_BanDetected(object sender, EventArgs<SimpleResponse> e)
@@ -187,6 +188,7 @@ namespace PluginEmpty
             ChannelClients = "";
             WhoIsTalking = "";
             TextMessage = "";
+            talking.Clear();
             // do not handle connection lost errors because they are already handled by QueryDispatcher_ServerClosedConnection
             if (e.SocketError == SocketError.ConnectionReset)
                 return;
@@ -206,24 +208,23 @@ namespace PluginEmpty
         public Dictionary<uint, string> talking = new Dictionary<uint, string>();
         private void Notifications_ChannelTalkStatusChanged(object sender, TalkStatusEventArgsBase e)
         {
-
-            if (e.TalkStatus == TalkStatus.TalkStarted)
+            if (talking.ContainsKey(e.ClientId))
             {
-                foreach (ClientListEntry cle in clients)
-                {
-                    if (e.ClientId == cle.ClientId)
-                    {
-                        if (!talking.ContainsKey(cle.ClientId))
-                            talking.Add(e.ClientId, cle.Nickname);
-                        break;
-                    }
-
-                }
-
+                if(e.TalkStatus == TalkStatus.TalkFinished)
+                talking.Remove(e.ClientId);
             }
             else
             {
-                talking.Remove(e.ClientId);
+                if (e.TalkStatus == TalkStatus.TalkStarted)
+                {
+                    foreach (ClientListEntry cle in clients)
+                    {
+                        if (e.ClientId == cle.ClientId)
+                        {
+                            talking.Add(e.ClientId, cle.Nickname);
+                        }
+                    }
+                }
             }
 
             WhoIsTalking = "";
@@ -243,6 +244,7 @@ namespace PluginEmpty
             ChannelClients = "";
             WhoIsTalking = "";
             TextMessage = "";
+            talking.Clear();
             QueryDispatcher = null;
             QueryRunner = null;
             Connected = ConnectionState.Disconnected;

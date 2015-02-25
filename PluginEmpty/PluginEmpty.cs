@@ -22,7 +22,7 @@ namespace PluginEmpty
 {
     internal class Measure
     {
-        public string RequestedStringValue;
+        
         public IntPtr SkinHandle;
         public TeamspeakConnectionThread teamspeakConnection = new TeamspeakConnectionThread();
         private System.Timers.Timer retryTimer = new System.Timers.Timer(5000);
@@ -35,6 +35,7 @@ namespace PluginEmpty
         {
             SkinHandle = api.GetSkin();
             retryTimer.Elapsed += tick;
+            AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(exceptionCaught);
             retryTimer.Start();
         }
 
@@ -43,6 +44,12 @@ namespace PluginEmpty
             return 0.0;
         }
 
+        static void exceptionCaught(object sender, UnhandledExceptionEventArgs args)
+        {
+            //I hope this will catch errors
+            API.Log(API.LogType.Error, "Exception caught: " + args.ExceptionObject.ToString());
+
+        }
 
         //events
         private void tick(object sender, System.Timers.ElapsedEventArgs e)
