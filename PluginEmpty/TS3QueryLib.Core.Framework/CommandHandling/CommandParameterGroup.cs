@@ -85,6 +85,7 @@ namespace TS3QueryLib.Core.CommandHandling
             }
             catch (Exception ex)
             {
+                
                 throw new InvalidCastException(string.Format("Could not cast parameter with name '{0}' and value '{1}' to target type of '{2}'.", parameterName, parameterValue, targetType), ex);
             }
         }

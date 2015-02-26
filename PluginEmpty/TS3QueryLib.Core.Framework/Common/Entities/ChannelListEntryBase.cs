@@ -81,7 +81,7 @@ namespace TS3QueryLib.Core.Common.Entities
         protected void FillFrom(CommandParameterGroup currrentParameterGroup, CommandParameterGroup firstParameterGroup)
         {
             if (currrentParameterGroup == null)
-                throw new ArgumentNullException("currrentParameterGroup");
+                throw new ArgumentNullException("currentParameterGroup");
 
 
             ChannelId = currrentParameterGroup.GetParameterValue<uint>("cid");

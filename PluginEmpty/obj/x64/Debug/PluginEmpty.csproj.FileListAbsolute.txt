@@ -8,3 +8,8 @@ D:\kevin\Documents\GitHub\TS3QueryLibRainmeter\PluginEmpty\x64\Debug\RainTS3.pdb
 D:\kevin\Documents\GitHub\TS3QueryLibRainmeter\PluginEmpty\obj\x64\Debug\PluginEmpty.csprojResolveAssemblyReference.cache
 D:\kevin\Documents\GitHub\TS3QueryLibRainmeter\PluginEmpty\obj\x64\Debug\RainTS3.dll
 D:\kevin\Documents\GitHub\TS3QueryLibRainmeter\PluginEmpty\obj\x64\Debug\RainTS3.pdb
+C:\Users\Cake\Documents\GitHub\RainmeterTS3Plugin\PluginEmpty\obj\x64\Debug\PluginEmpty.csprojResolveAssemblyReference.cache
+C:\Users\Cake\Documents\GitHub\RainmeterTS3Plugin\PluginEmpty\obj\x64\Debug\RainTS3.dll
+C:\Users\Cake\Documents\GitHub\RainmeterTS3Plugin\PluginEmpty\obj\x64\Debug\RainTS3.pdb
+C:\Users\Cake\Documents\GitHub\RainmeterTS3Plugin\PluginEmpty\x64\Debug\RainTS3.dll
+C:\Users\Cake\Documents\GitHub\RainmeterTS3Plugin\PluginEmpty\x64\Debug\RainTS3.pdb

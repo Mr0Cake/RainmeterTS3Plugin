@@ -68,33 +68,11 @@ namespace TS3QueryLib.Core.Client
         }
 
         /// <summary>
-        /// Displays a list of channels created on a virtual server including their ID, order, name, etc. The output can be modified using several command options. 
+        /// Displays a list of channels created on a virtual server including their ID, order, name, etc. 
         /// </summary>
-        /// <param name="includeAll">if set to true all options are set to true.</param>
-        /// <param name="includeTopics">if set to true topic is included</param>
-        /// <param name="includeFlags">if set to true flag parameters are included</param>
-        /// <param name="includeVoiceInfo">if set to true voice parameters are included</param>
-        /// <param name="includeLimits">if set to true limit parameters are included</param>
-        /// <param name="includeIcon">if set to true icon parameter is included</param>
-        public ListResponse<ChannelListEntry> GetChannelList(bool includeAll = false, bool includeTopics = false, bool includeFlags = false, bool includeVoiceInfo = false, bool includeLimits = false, bool includeIcon = false)
+        public ListResponse<ChannelListEntry> GetChannelList()
         {
             Command command = SharedCommandName.ChannelList.CreateCommand();
-
-            if (includeTopics || includeAll)
-                command.AddOption("topic");
-
-            if (includeFlags || includeAll)
-                command.AddOption("flags");
-
-            if (includeVoiceInfo || includeAll)
-                command.AddOption("voice");
-
-            if (includeLimits || includeAll)
-                command.AddOption("limits");
-
-            if (includeIcon || includeAll)
-                command.AddOption("icon");
-
             return ListResponse<ChannelListEntry>.Parse(SendCommand(command), ChannelListEntry.Parse);
         }
         

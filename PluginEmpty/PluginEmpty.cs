@@ -26,17 +26,44 @@ namespace PluginEmpty
         public IntPtr SkinHandle;
         public TeamspeakConnectionThread teamspeakConnection = new TeamspeakConnectionThread();
         private System.Timers.Timer retryTimer = new System.Timers.Timer(5000);
-
+        private string output = "not connected";
         internal Measure()
         {
+            retryTimer.Elapsed += tick;
+            retryTimer.Start();
+            if (teamspeakConnection.Connected != TeamspeakConnectionThread.ConnectionState.Disconnected)
+                teamspeakConnection.Disconnect();
         }
 
         internal void Reload(Rainmeter.API api, ref double maxValue)
         {
             SkinHandle = api.GetSkin();
-            retryTimer.Elapsed += tick;
+            if (teamspeakConnection.Connected == TeamspeakConnectionThread.ConnectionState.Connected)
+            {
+                output = teamspeakConnection.ChannelName +
+                   "\r\n\r\n" + teamspeakConnection.ChannelClients +
+                   "\r\n" + teamspeakConnection.WhoIsTalking +
+                   "\r\n\r\n" + teamspeakConnection.TextMessage;
+                API.Log(API.LogType.Debug, "Teamspeak.ddl: output=\r\n"+output);
+            }
+            else
+            {
+                if (teamspeakConnection.Connected != TeamspeakConnectionThread.ConnectionState.Connecting)
+                {
+                    if (teamspeakConnection.ConnectionThread == null || teamspeakConnection.ConnectionThread.ThreadState == ThreadState.Stopped)
+                    {
+                        if (!retryTimer.Enabled)
+                        {
+                            retryTimer.Start();
+                        }
+                    }
+                }
+                else
+                {
+                    output = "connecting";
+                }
+            }
             
-            retryTimer.Start();
         }
 
         internal double Update()
@@ -71,32 +98,11 @@ namespace PluginEmpty
 #if DLLEXPORT_GETSTRING
         internal string GetString()
         {
-            string output = "not connected";
-            if (teamspeakConnection.Connected == TeamspeakConnectionThread.ConnectionState.Connected)
-            {
-                 output = teamspeakConnection.ChannelName +
-                    "\r\n\r\n" + teamspeakConnection.ChannelClients +
-                    "\r\n" + teamspeakConnection.WhoIsTalking +
-                    "\r\n\r\n" + teamspeakConnection.TextMessage;
-            }
-            else
-            {
-                if (teamspeakConnection.Connected != TeamspeakConnectionThread.ConnectionState.Connecting)
-                {
-                    if (teamspeakConnection.ConnectionThread == null || teamspeakConnection.ConnectionThread.ThreadState == ThreadState.Stopped)
-                    {
-                        if (!retryTimer.Enabled)
-                        {
-                            retryTimer.Start();
-                        }
-                    }
-                }
-                else
-                {
-                    output = "connecting";
-                }
-            }
-            return output;
+
+            return teamspeakConnection.ChannelName +
+                   "\r\n\r\n" + teamspeakConnection.ChannelClients +
+                   "\r\n" + teamspeakConnection.WhoIsTalking +
+                   "\r\n\r\n" + teamspeakConnection.TextMessage; 
             
         }
 #endif

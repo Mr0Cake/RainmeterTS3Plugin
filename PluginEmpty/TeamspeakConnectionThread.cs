@@ -34,6 +34,7 @@ namespace PluginEmpty
         public string FinishAction;
         //public static Thread ConnectionThread;
         private static System.Timers.Timer time = new System.Timers.Timer();
+        private static System.Timers.Timer chatTimer = new System.Timers.Timer(60000);
         public readonly object ThreadLocker = new object();
         public ConnectionState Connected = ConnectionState.Disconnected;
         public enum ConnectionState
@@ -69,6 +70,7 @@ namespace PluginEmpty
                 }
                 time.Interval = 10000;
                 time.Elapsed += time_Elapsed;
+                chatTimer.Elapsed += chatTime_Elapsed;
                 Connected = ConnectionState.Connecting;
                 QueryDispatcher = new AsyncTcpDispatcher("localhost", 25639);
                 QueryDispatcher.BanDetected += QueryDispatcher_BanDetected;
@@ -84,6 +86,12 @@ namespace PluginEmpty
                 Disconnect();
             }
 
+        }
+
+        private void chatTime_Elapsed(object sender, ElapsedEventArgs e)
+        {
+            TextMessage = "";
+            chatTimer.Stop();
         }
 
         private void time_Elapsed(object sender, ElapsedEventArgs e)
@@ -178,6 +186,7 @@ namespace PluginEmpty
         private void Notifications_MessageReceived(object sender, TS3QueryLib.Core.Server.Notification.EventArgs.MessageReceivedEventArgs e)
         {
             TextMessage = e.InvokerNickname + ":\r\n" + e.Message;
+            chatTimer.Start();
         }
 
         private void QueryDispatcher_ServerClosedConnection(object sender, System.EventArgs e)

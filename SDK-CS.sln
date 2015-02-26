@@ -1,8 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.21005.1
-MinimumVisualStudioVersion = 10.0.40219.1
+# Visual Studio 2012
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PluginEmpty", "PluginEmpty\PluginEmpty.csproj", "{D31F73ED-3978-44FA-B599-49584BA30D3A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PluginParentChild", "PluginParentChild\PluginParentChild.csproj", "{CA8F01AC-9582-4820-AA24-919EC747536E}"
@@ -37,7 +35,6 @@ Global
 		{D31F73ED-3978-44FA-B599-49584BA30D3A}.Release|x86.Build.0 = Release|x86
 		{CA8F01AC-9582-4820-AA24-919EC747536E}.Debug|Any CPU.ActiveCfg = Debug|x86
 		{CA8F01AC-9582-4820-AA24-919EC747536E}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
-		{CA8F01AC-9582-4820-AA24-919EC747536E}.Debug|Mixed Platforms.Build.0 = Debug|x86
 		{CA8F01AC-9582-4820-AA24-919EC747536E}.Debug|x64.ActiveCfg = Debug|x64
 		{CA8F01AC-9582-4820-AA24-919EC747536E}.Debug|x64.Build.0 = Debug|x64
 		{CA8F01AC-9582-4820-AA24-919EC747536E}.Debug|x86.ActiveCfg = Debug|x86
@@ -51,7 +48,6 @@ Global
 		{CA8F01AC-9582-4820-AA24-919EC747536E}.Release|x86.Build.0 = Release|x86
 		{F43D0210-4CED-49B0-93C4-C694EFB44282}.Debug|Any CPU.ActiveCfg = Debug|x86
 		{F43D0210-4CED-49B0-93C4-C694EFB44282}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
-		{F43D0210-4CED-49B0-93C4-C694EFB44282}.Debug|Mixed Platforms.Build.0 = Debug|x86
 		{F43D0210-4CED-49B0-93C4-C694EFB44282}.Debug|x64.ActiveCfg = Debug|x64
 		{F43D0210-4CED-49B0-93C4-C694EFB44282}.Debug|x64.Build.0 = Debug|x64
 		{F43D0210-4CED-49B0-93C4-C694EFB44282}.Debug|x86.ActiveCfg = Debug|x86
