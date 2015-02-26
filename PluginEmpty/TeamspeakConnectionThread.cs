@@ -58,23 +58,31 @@ namespace PluginEmpty
 
         private void Connect()
         {
-            API.Log(API.LogType.Debug, "Teamspeak.ddl: Connecting");
-            // do not connect when already connected or during connection establishing
-            if (QueryDispatcher != null)
+            try
             {
-                API.Log(API.LogType.Debug, "Teamspeak.ddl: QueryDispatcher not null");
-                return;
+                API.Log(API.LogType.Debug, "Teamspeak.ddl: Connecting");
+                // do not connect when already connected or during connection establishing
+                if (QueryDispatcher != null)
+                {
+                    API.Log(API.LogType.Debug, "Teamspeak.ddl: QueryDispatcher not null");
+                    return;
+                }
+                time.Interval = 10000;
+                time.Elapsed += time_Elapsed;
+                Connected = ConnectionState.Connecting;
+                QueryDispatcher = new AsyncTcpDispatcher("localhost", 25639);
+                QueryDispatcher.BanDetected += QueryDispatcher_BanDetected;
+                QueryDispatcher.ReadyForSendingCommands += QueryDispatcher_ReadyForSendingCommands;
+                QueryDispatcher.ServerClosedConnection += QueryDispatcher_ServerClosedConnection;
+                QueryDispatcher.SocketError += QueryDispatcher_SocketError;
+                QueryDispatcher.NotificationReceived += QueryDispatcher_NotificationReceived;
+                QueryDispatcher.Connect();
             }
-            time.Interval = 10000;
-            time.Elapsed += time_Elapsed;
-            Connected = ConnectionState.Connecting;
-            QueryDispatcher = new AsyncTcpDispatcher("localhost", 25639);
-            QueryDispatcher.BanDetected += QueryDispatcher_BanDetected;
-            QueryDispatcher.ReadyForSendingCommands += QueryDispatcher_ReadyForSendingCommands;
-            QueryDispatcher.ServerClosedConnection += QueryDispatcher_ServerClosedConnection;
-            QueryDispatcher.SocketError += QueryDispatcher_SocketError;
-            QueryDispatcher.NotificationReceived += QueryDispatcher_NotificationReceived;
-            QueryDispatcher.Connect();
+            catch (Exception e)
+            {
+                API.Log(API.LogType.Error, "Teamspeak.ddl: "+e.Message);
+                Disconnect();
+            }
 
         }
 
@@ -115,6 +123,7 @@ namespace PluginEmpty
             API.Log(API.LogType.Debug, "Teamspeak.ddl: Connected");
             time.Start();
             // you can only run commands on the queryrunner when this event has been raised first!
+            try { 
             QueryRunner = new QueryRunner(QueryDispatcher);
             do
             {
@@ -126,6 +135,12 @@ namespace PluginEmpty
             QueryRunner.Notifications.MessageReceived += Notifications_MessageReceived;
             QueryRunner.RegisterForNotifications(ClientNotifyRegisterEvent.Any);
             updateOutput();
+            }
+            catch (Exception d)
+            {
+                API.Log(API.LogType.Error, "Teamspeak.ddl: " + d.Message);
+                Disconnect();
+            }
         }
 
         private void updateOutput()
