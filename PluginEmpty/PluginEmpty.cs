@@ -24,15 +24,15 @@ namespace PluginEmpty
     {
         
         public IntPtr SkinHandle;
-        public TeamspeakConnectionThread teamspeakConnection = new TeamspeakConnectionThread();
+        public static TeamspeakConnectionThread teamspeakConnection = new TeamspeakConnectionThread();
         private System.Timers.Timer retryTimer = new System.Timers.Timer(5000);
         private string output = "not connected";
         internal Measure()
         {
+            teamspeakConnection.Disconnect();
             retryTimer.Elapsed += tick;
             retryTimer.Start();
-            if (teamspeakConnection.Connected != TeamspeakConnectionThread.ConnectionState.Disconnected)
-                teamspeakConnection.Disconnect();
+            
         }
 
         internal void Reload(Rainmeter.API api, ref double maxValue)
