@@ -262,8 +262,13 @@ namespace PluginEmpty
         public void Disconnect()
         {
             // QueryRunner disposes the Dispatcher too
-            if (QueryRunner != null)
-                QueryRunner.Dispose();
+            //if (QueryRunner != null)
+            //    QueryRunner.Dispose();
+            if (QueryDispatcher != null)
+            {
+                QueryDispatcher.Disconnect();
+                QueryDispatcher.DetachAllEventListeners();
+            }
             ChannelName = "";
             ChannelClients = "";
             WhoIsTalking = "";
