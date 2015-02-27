@@ -167,7 +167,7 @@ namespace PluginEmpty
                     {
                         if (client.ChannelId == currentUser.ChannelId)
                         {
-                            ChannelClients += ("\t"+client.Nickname + Environment.NewLine);
+                            ChannelClients += (client.Nickname + Environment.NewLine);
                         }
                     }
                     break;

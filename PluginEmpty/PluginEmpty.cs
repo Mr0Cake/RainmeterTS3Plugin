@@ -16,7 +16,7 @@ using System.Threading;
 // Plugin.ExecuteBang have been commented out. If you need GetString
 // and/or ExecuteBang and you have read what they are used for from the
 // SDK docs, uncomment the function(s). Otherwise leave them commented out
-// (or get rid of them)!qsdf
+// (or get rid of them)!
 
 namespace PluginEmpty
 {
@@ -26,7 +26,10 @@ namespace PluginEmpty
         public IntPtr SkinHandle;
         public static TeamspeakConnectionThread teamspeakConnection = new TeamspeakConnectionThread();
         private System.Timers.Timer retryTimer = new System.Timers.Timer(5000);
-        private string output = "not connected";
+        //private string ReturnValue;
+        private static string channelName = "not connected";
+        private static string clients = "", talking = "", message = "";
+
         internal Measure()
         {
             teamspeakConnection.Disconnect();
@@ -38,15 +41,9 @@ namespace PluginEmpty
         internal void Reload(Rainmeter.API api, ref double maxValue)
         {
             SkinHandle = api.GetSkin();
-            if (teamspeakConnection.Connected == TeamspeakConnectionThread.ConnectionState.Connected)
-            {
-                output = teamspeakConnection.ChannelName +
-                   "\r\n\r\n" + teamspeakConnection.ChannelClients +
-                   "\r\n" + teamspeakConnection.WhoIsTalking +
-                   "\r\n\r\n" + teamspeakConnection.TextMessage;
-                API.Log(API.LogType.Debug, "Teamspeak.ddl: output=\r\n"+output);
-            }
-            else
+            
+
+            if (teamspeakConnection.Connected != TeamspeakConnectionThread.ConnectionState.Connected)
             {
                 if (teamspeakConnection.Connected != TeamspeakConnectionThread.ConnectionState.Connecting)
                 {
@@ -60,14 +57,24 @@ namespace PluginEmpty
                 }
                 else
                 {
-                    output = "connecting";
+                    //channelName = "connecting";
                 }
             }
+            
             
         }
 
         internal double Update()
         {
+            
+
+            //channelName = teamspeakConnection.ChannelName;
+            //clients = teamspeakConnection.ChannelClients;
+            //talking = teamspeakConnection.WhoIsTalking;
+            //message = teamspeakConnection.TextMessage;
+
+            //API.Log(API.LogType.Debug, "Teamspeak.ddl: output=\r\n" + channelName + "\r\n" + clients + "\r\n" + message + "\r\n" + talking);
+            
             return 0.0;
         }
 
@@ -98,11 +105,12 @@ namespace PluginEmpty
 #if DLLEXPORT_GETSTRING
         internal string GetString()
         {
-
-            return teamspeakConnection.ChannelName +
-                   "\r\n\r\n" + teamspeakConnection.ChannelClients +
-                   "\r\n" + teamspeakConnection.WhoIsTalking +
-                   "\r\n\r\n" + teamspeakConnection.TextMessage; 
+            //API.Log(API.LogType.Debug, "Teamspeak.ddl: output2=\r\n" + channelName + "\r\n" + clients + "\r\n" + message + "\r\n" + talking);
+            return teamspeakConnection.ChannelName + "\r\n\r\n" +
+                teamspeakConnection.ChannelClients + "\r\n" +
+                teamspeakConnection.WhoIsTalking + "\r\n\r\n" +
+                teamspeakConnection.TextMessage;
+            
             
         }
 #endif
