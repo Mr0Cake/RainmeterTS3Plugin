@@ -370,7 +370,7 @@ namespace PluginEmpty
         private void ClearValues(bool ch = false)
         {
             
-            ChannelName = "Teamspeak is not running.";
+            ChannelName = "Not connected.";
             ChannelClients = "";
             WhoIsTalking = "";
             TextMessage = "";
