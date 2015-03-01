@@ -92,95 +92,7 @@ namespace PluginEmpty
 
         }
 
-        private void chatTime_Elapsed(object sender, ElapsedEventArgs e)
-        {
-            TextMessage = "";
-            chatTimer.Stop();
-        }
-
-        private void time_Elapsed(object sender, ElapsedEventArgs e)
-        {
-            if (Connected == ConnectionState.Connected && !(currentUser = QueryRunner.SendWhoAmI()).IsErroneous)
-            {
-                currentUser = QueryRunner.SendWhoAmI();
-                API.Log(API.LogType.Debug, "Teamspeak.ddl: server_keep_alive_message");
-                //reset timer to 5 seconds
-                if (time.Interval != 5000)
-                    time.Interval = 5000;
-            }
-            else
-            {
-                API.Log(API.LogType.Debug, "Try Reconnect");
-                //Try again when disconnected
-                if (Connected != TeamspeakConnectionThread.ConnectionState.Connecting)
-                {
-                    ChannelName = "";
-                    ChannelClients = "";
-                    WhoIsTalking = "";
-                    TextMessage = "";
-                    if (QueryDispatcher != null)
-                    {
-                        QueryDispatcher.Disconnect();
-                        QueryDispatcher.DetachAllEventListeners();
-                    }
-
-                    QueryDispatcher = null;
-                    QueryRunner = null;
-                    Connect();
-                    API.Log(API.LogType.Debug, "Teamspeak.ddl: ReConnect");
-                    
-                }
-            }
-
-        }
-
-        private void QueryDispatcher_ReadyForSendingCommands(object sender, System.EventArgs e)
-        {
-            
-            API.Log(API.LogType.Debug, "Teamspeak.ddl: Teamspeak Is running");
-            time.Start();
-            // you can only run commands on the queryrunner when this event has been raised first!
-            try { 
-                QueryRunner = new QueryRunner(QueryDispatcher);
-                int i = 0;
-                char[] dots = {'\0','\0','\0'};
-                do
-                {
-                    //is teamspeak connected to a server
-                    currentUser = QueryRunner.SendWhoAmI();
-                    ChannelName = "Connecting to server"+new string(dots);
-                    API.Log(API.LogType.Debug, "Teamspeak.ddl: Checking ServerConnection Message: "+currentUser.ErrorMessage);
-
-                    if (i <= 2)
-                    {
-                        dots[i] = '.';
-                        i++;
-                    }
-                    else
-                    {
-                        dots[0] = '\0';
-                        dots[1] = '\0';
-                        dots[2] = '\0';
-                        i = 0;
-                    }
-                    
-                    System.Threading.Thread.Sleep(1000);
-                } while (currentUser.IsErroneous);
-                Connected = ConnectionState.Connected;
-                API.Log(API.LogType.Debug, "Teamspeak.ddl: Connected to server");
-                QueryRunner.Notifications.ChannelTalkStatusChanged += Notifications_ChannelTalkStatusChanged;
-                QueryRunner.Notifications.ClientMoved += Notifications_ClientMoved;
-                QueryRunner.Notifications.MessageReceived += Notifications_MessageReceived;
-                QueryRunner.RegisterForNotifications(ClientNotifyRegisterEvent.Any);
-                API.Log(API.LogType.Debug, "Teamspeak.ddl: Registered for events");
-                updateOutput();
-            }
-            catch (Exception d)
-            {
-                API.Log(API.LogType.Error, "Teamspeak.ddl: " + d.Message);
-                Disconnect();
-            }
-        }
+        
         private void updateChannelClientsStringOutput()
         {
             lock (ThreadLocker)
@@ -230,6 +142,142 @@ namespace PluginEmpty
                 Disconnect();
             }
         }
+        
+
+        public void Disconnect()
+        {
+            // QueryRunner disposes the Dispatcher too
+            //if (QueryRunner != null)
+            //    QueryRunner.Dispose();
+            if (QueryDispatcher != null)
+            {
+                QueryDispatcher.Disconnect();
+                QueryDispatcher.DetachAllEventListeners();
+            }
+
+            //clear values
+            ClearValues();
+            QueryDispatcher = null;
+            QueryRunner = null;
+            Connected = ConnectionState.Disconnected;
+        }
+
+        /// <summary>
+        /// reset values
+        /// </summary>
+        private void ClearValues()
+        {
+            ChannelName = "Not connected.";
+            ChannelClients = "";
+            WhoIsTalking = "";
+            TextMessage = "";
+            CurrentChannelID = 0;
+            ChannelClientList = new List<ClientListEntry>();
+            talking.Clear();
+        }
+
+#region Events
+        /// <summary>
+        /// This event marks the end of displaying the chatmessage.
+        /// </summary>
+        private void chatTime_Elapsed(object sender, ElapsedEventArgs e)
+        {
+            TextMessage = "";
+            chatTimer.Stop();
+        }
+
+        /// <summary>
+        /// This will keep the connection to the telnet server alive
+        /// Checks if you are connected to teamspeak and to a server and will reset the timer
+        /// else
+        /// Try reconnecting
+        /// </summary>
+        private void time_Elapsed(object sender, ElapsedEventArgs e)
+        {
+            if (Connected == ConnectionState.Connected && !(currentUser = QueryRunner.SendWhoAmI()).IsErroneous)
+            {
+                currentUser = QueryRunner.SendWhoAmI();
+                API.Log(API.LogType.Debug, "Teamspeak.ddl: server_keep_alive_message");
+                //reset timer to 5 seconds
+                if (time.Interval != 5000)
+                    time.Interval = 5000;
+            }
+            else
+            {
+                API.Log(API.LogType.Debug, "Try Reconnect");
+                //Try again when disconnected
+                if (Connected != TeamspeakConnectionThread.ConnectionState.Connecting)
+                {
+                    ClearValues();
+                    if (QueryDispatcher != null)
+                    {
+                        QueryDispatcher.Disconnect();
+                        QueryDispatcher.DetachAllEventListeners();
+                    }
+
+                    QueryDispatcher = null;
+                    QueryRunner = null;
+                    Connect();
+                    API.Log(API.LogType.Debug, "Teamspeak.ddl: ReConnect");
+
+                }
+            }
+
+        }
+
+        /// <summary>
+        /// Ready for sending commands
+        /// </summary>
+        private void QueryDispatcher_ReadyForSendingCommands(object sender, System.EventArgs e)
+        {
+            API.Log(API.LogType.Debug, "Teamspeak.ddl: Teamspeak Is running");
+            time.Start();
+            // you can only run commands on the queryrunner when this event has been raised first!
+            try
+            {
+                QueryRunner = new QueryRunner(QueryDispatcher);
+                int i = 0;
+                char[] dots = { '\0', '\0', '\0' };
+
+                do
+                {
+                    //is teamspeak connected to a server
+                    currentUser = QueryRunner.SendWhoAmI();
+                    ChannelName = "Connecting to server" + new string(dots);
+                    API.Log(API.LogType.Debug, "Teamspeak.ddl: Checking ServerConnection Message: " + currentUser.ErrorMessage);
+                    //some code to display dots
+                    if (i <= 2)
+                    {
+                        dots[i] = '.';
+                        i++;
+                    }
+                    else
+                    {
+                        dots[0] = '\0';
+                        dots[1] = '\0';
+                        dots[2] = '\0';
+                        i = 0;
+                    }
+
+                    System.Threading.Thread.Sleep(1000);
+                } while (currentUser.IsErroneous);
+
+                Connected = ConnectionState.Connected;
+                API.Log(API.LogType.Debug, "Teamspeak.ddl: Connected to server");
+                QueryRunner.Notifications.ChannelTalkStatusChanged += Notifications_ChannelTalkStatusChanged;
+                QueryRunner.Notifications.ClientMoved += Notifications_ClientMoved;
+                QueryRunner.Notifications.MessageReceived += Notifications_MessageReceived;
+                QueryRunner.RegisterForNotifications(ClientNotifyRegisterEvent.Any);
+                API.Log(API.LogType.Debug, "Teamspeak.ddl: Registered for events");
+                updateOutput();
+            }
+            catch (Exception d)
+            {
+                API.Log(API.LogType.Error, "Teamspeak.ddl: " + d.Message);
+                Disconnect();
+            }
+        }
+
         /// <summary>
         /// If a client moves on the server this event will fire.
         /// This checks if the user in the event is a user in your channel and will either remove or update
@@ -261,7 +309,7 @@ namespace PluginEmpty
                     }
                     if (remove)
                     {
-                        API.Log(API.LogType.Debug, "Teamspeak.ddl: ClientMoved - ClientRemoved: "+toRemove.Nickname);
+                        API.Log(API.LogType.Debug, "Teamspeak.ddl: ClientMoved - ClientRemoved: " + toRemove.Nickname);
                         ChannelClientList.Remove(toRemove);
                         updateChannelClientsStringOutput();
                     }
@@ -270,25 +318,42 @@ namespace PluginEmpty
 
         }
 
+        /// <summary>
+        /// Event MessageReceived
+        /// Will change TextMessage to "nickname: message"
+        /// starts a timer that will clear the message after 1 minute
+        /// </summary>
         private void Notifications_MessageReceived(object sender, TS3QueryLib.Core.Server.Notification.EventArgs.MessageReceivedEventArgs e)
         {
             TextMessage = e.InvokerNickname + ":\r\n" + e.Message;
             chatTimer.Start();
         }
 
+        /// <summary>
+        /// this event is raised when the connection to the server is lost.
+        /// </summary>
         private void QueryDispatcher_ServerClosedConnection(object sender, System.EventArgs e)
         {
-            // this event is raised when the connection to the server is lost.
-            Connected = ConnectionState.Disconnected;
-            ClearValues();
+            Disconnect();
         }
-
+        /// <summary>
+        /// You have been banned from this server
+        /// </summary>
         private void QueryDispatcher_BanDetected(object sender, EventArgs<SimpleResponse> e)
         {
-            Connected = ConnectionState.Disconnected;
             ChannelName = "Banned";
+            Disconnect();
         }
 
+        /// <summary>
+        /// This event is raised when a socket exception has occured
+        /// ConnectionRefused:
+        /// Teamspeak is not running
+        /// Increment reconnect timer time Interval with 1 second until 15 seconds
+        /// Disconnect
+        /// other:
+        /// Disconnect
+        /// </summary>
         private void QueryDispatcher_SocketError(object sender, SocketErrorEventArgs e)
         {
             ClearValues();
@@ -296,25 +361,38 @@ namespace PluginEmpty
             if (e.SocketError == SocketError.ConnectionReset)
                 return;
 
-            if (e.SocketError == SocketError.ConnectionRefused) 
+            if (e.SocketError == SocketError.ConnectionRefused)
             {
                 API.Log(API.LogType.Error, "Teamspeak.ddl: socket error, Teamspeak Not Running");
-                //increment reconnect timer with 1s for each error received
                 time.Interval = time.Interval < 15000 ? time.Interval + 1000 : time.Interval;
-                
             }
-            // this event is raised when a socket exception has occured
-            API.Log(API.LogType.Error, "Teamspeak.ddl: socket error" + e.SocketError.ToString());
-            // force disconnect
+            else
+            {
+                API.Log(API.LogType.Error, "Teamspeak.ddl: socket error" + e.SocketError.ToString());
+            }
+
             Disconnect();
         }
 
+        /// <summary>
+        /// This event will bind to all notifications.
+        /// You can display all the events using 'e'
+        /// </summary>
         private void QueryDispatcher_NotificationReceived(object sender, EventArgs<string> e)
         {
 
         }
-        private Dictionary<uint, string> talking = new Dictionary<uint, string>();
         
+
+        /// <summary>
+        /// This event is raised when a client starts or stops talking
+        /// If Client ID is in talking and talkFinished -> remove from talking
+        /// If Client ID is not in talking and TalkStarted -> check for id in ChannelClientList
+        /// If ID is not found in ChannelClientList that means we have a user that was not added correctly
+        /// This might happen when someone joins your channel at the same time.
+        /// If this happens -> update all users.
+        /// </summary>
+        private Dictionary<uint, string> talking = new Dictionary<uint, string>();
         private void Notifications_ChannelTalkStatusChanged(object sender, TalkStatusEventArgsBase e)
         {
             lock (ThreadLocker)
@@ -326,6 +404,7 @@ namespace PluginEmpty
                 }
                 else
                 {
+                    bool found = false;
                     if (e.TalkStatus == TalkStatus.TalkStarted)
                     {
                         foreach (ClientListEntry cle in ChannelClientList)
@@ -333,8 +412,17 @@ namespace PluginEmpty
                             if (e.ClientId == cle.ClientId)
                             {
                                 talking.Add(e.ClientId, cle.Nickname);
+                                found = true;
+                                break;
                             }
                         }
+                    }
+                    if (!found)
+                    {
+                        //this means someone in your channel is not in the channelClientList but is talking
+                        //-> ChannelClientList is not complete
+                        API.Log(API.LogType.Debug, "Teamspeak.ddl: Talking client not in ChannelList");
+                        updateOutput();
                     }
                 }
 
@@ -348,36 +436,8 @@ namespace PluginEmpty
             }
 
         }
+#endregion
 
-        public void Disconnect()
-        {
-            // QueryRunner disposes the Dispatcher too
-            //if (QueryRunner != null)
-            //    QueryRunner.Dispose();
-            if (QueryDispatcher != null)
-            {
-                QueryDispatcher.Disconnect();
-                QueryDispatcher.DetachAllEventListeners();
-            }
-
-            //clear values
-            ClearValues();
-            QueryDispatcher = null;
-            QueryRunner = null;
-            Connected = ConnectionState.Disconnected;
-        }
-
-        private void ClearValues(bool ch = false)
-        {
-            
-            ChannelName = "Not connected.";
-            ChannelClients = "";
-            WhoIsTalking = "";
-            TextMessage = "";
-            CurrentChannelID = 0;
-            ChannelClientList = new List<ClientListEntry>();
-            talking.Clear();
-        }
 
     }
 }
