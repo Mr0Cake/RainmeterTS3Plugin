@@ -139,9 +139,13 @@ namespace TS3QueryLib.Core
                     SocketAsyncEventArgs = null;
                 }
             }
-            catch (ObjectDisposedException)
+            catch (Exception e)
             {
+                //throws objectdisposed exceptions added NullReference exception for testing
+                if (e is ObjectDisposedException)
+                {
 
+                }
             }
 
             return true;

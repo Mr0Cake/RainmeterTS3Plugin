@@ -74,16 +74,19 @@ namespace PluginEmpty
                     API.Log(API.LogType.Debug, "Teamspeak.ddl: QueryDispatcher not null");
                     return;
                 }
-                
-                Connected = ConnectionState.Connecting;
-                QueryDispatcher = new AsyncTcpDispatcher("localhost", 25639);
-                QueryDispatcher.BanDetected += QueryDispatcher_BanDetected;
-                QueryDispatcher.ReadyForSendingCommands += QueryDispatcher_ReadyForSendingCommands;
-                QueryDispatcher.ServerClosedConnection += QueryDispatcher_ServerClosedConnection;
-                QueryDispatcher.SocketError += QueryDispatcher_SocketError;
-                QueryDispatcher.NotificationReceived += QueryDispatcher_NotificationReceived;
-                QueryDispatcher.Connect();
-                Keep_Alive_Timer.Start();
+                lock (ThreadLocker)
+                {
+                    Connected = ConnectionState.Connecting;
+                    QueryDispatcher = new AsyncTcpDispatcher("localhost", 25639);
+                    QueryDispatcher.BanDetected += QueryDispatcher_BanDetected;
+                    QueryDispatcher.ReadyForSendingCommands += QueryDispatcher_ReadyForSendingCommands;
+                    QueryDispatcher.ServerClosedConnection += QueryDispatcher_ServerClosedConnection;
+                    QueryDispatcher.SocketError += QueryDispatcher_SocketError;
+                    QueryDispatcher.NotificationReceived += QueryDispatcher_NotificationReceived;
+                    API.Log(API.LogType.Debug, "Teamspeak.ddl: linked events");
+                    QueryDispatcher.Connect();
+                    Keep_Alive_Timer.Start();
+                }
                 
             }
             catch (Exception e)
@@ -117,7 +120,8 @@ namespace PluginEmpty
                 //look for / not preceded by \
                 string[] paths = Regex.Split(channelpath, @"(?<![\\])/");
 
-                ChannelName = paths[paths.Length - 1].Replace(@"\/", "/");
+                ChannelName = paths[paths.Length - 1].Replace(@"\/", "/").Replace("[cspacer]", String.Empty).Trim();
+
                 clients = QueryRunner.GetClientList();
 
                 lock (ThreadLocker)
@@ -144,7 +148,7 @@ namespace PluginEmpty
                 Disconnect();
             }
         }
-        
+
 
         public void Disconnect()
         {
@@ -402,6 +406,7 @@ namespace PluginEmpty
         {
             lock (ThreadLocker)
             {
+                API.Log(API.LogType.Debug, "Teamspeak.ddl: ChannelTalkStatusEvent"+e.ClientId+" "+e.TalkStatus);
                 if (talking.ContainsKey(e.ClientId))
                 {
                     if (e.TalkStatus == TalkStatus.TalkFinished)
@@ -427,7 +432,14 @@ namespace PluginEmpty
                         //this means someone in your channel is not in the channelClientList but is talking
                         //-> ChannelClientList is not complete
                         API.Log(API.LogType.Debug, "Teamspeak.ddl: Talking client not in ChannelList");
-                        updateOutput();
+                        if (ThreadPool.QueueUserWorkItem(new WaitCallback(updateOutput)))
+                        {
+                            API.Log(API.LogType.Debug, "Teamspeak.ddl: Talking UpdateOutput queued");
+                        }
+                        else
+                        {
+                            API.Log(API.LogType.Debug, "Teamspeak.ddl: Talking Failed to queue UpdateOutput");
+                        }
                     }
                 }
 
