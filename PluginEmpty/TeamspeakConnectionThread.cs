@@ -15,6 +15,7 @@ using TS3QueryLib.Core.Common.Responses;
 using TS3QueryLib.Core.Communication;
 using Rainmeter;
 using System.Text.RegularExpressions;
+using System.Text;
 
 namespace PluginEmpty
 {
@@ -49,6 +50,7 @@ namespace PluginEmpty
             Connected,
             Disconnected
         }
+        
         public static AsyncTcpDispatcher QueryDispatcher { get; set; }
 
         public static QueryRunner QueryRunner { get; set; }
@@ -326,7 +328,52 @@ namespace PluginEmpty
             }
 
         }
+        /// <summary>
+        /// Removes brackets and text between it
+        /// </summary>
+        /// <param name="message">string to remove the brackets from</param>
+        /// <returns></returns>
+        private string ClearMessage(string message)
+        {
+            StringBuilder sb = new StringBuilder(message);
 
+            int counter = 0;
+            int pos = 0;
+            int size = 0;
+            char current = '\0';
+            for (int i = 0; i < message.Length; i++)
+            {
+                current = message[i];
+                if (current == '[')
+                {
+                    if (counter < 1)
+                    {
+                        pos = i;
+                    }
+                    counter++;
+                }
+                if (current == ']')
+                {
+                    if (counter > 0)
+                    {
+                        if (counter == 1)
+                        {
+                            sb.Remove(pos, ++size);
+                            counter = 0;
+                            pos = 0;
+                            size = 0;
+                        }
+                        else
+                        {
+                            counter--;
+                        }
+                    }
+                }
+                if (counter > 0)
+                    size++;
+            }
+                return sb.ToString();
+        }
         /// <summary>
         /// Event MessageReceived
         /// Will change TextMessage to "nickname: message"
@@ -334,7 +381,7 @@ namespace PluginEmpty
         /// </summary>
         private void Notifications_MessageReceived(object sender, TS3QueryLib.Core.Server.Notification.EventArgs.MessageReceivedEventArgs e)
         {
-            TextMessage = e.InvokerNickname + ":\r\n" + e.Message;
+            TextMessage = e.InvokerNickname + ":\r\n" + ClearMessage(e.Message);
             chatTimer.Start();
         }
 
