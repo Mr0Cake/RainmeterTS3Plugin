@@ -348,7 +348,7 @@ namespace PluginEmpty
                 {
                     if (counter < 1)
                     {
-                        pos = i;
+                        pos += i;
                     }
                     counter++;
                 }
@@ -359,8 +359,8 @@ namespace PluginEmpty
                         if (counter == 1)
                         {
                             sb.Remove(pos, ++size);
+                            pos = 0-size;
                             counter = 0;
-                            pos = 0;
                             size = 0;
                         }
                         else
