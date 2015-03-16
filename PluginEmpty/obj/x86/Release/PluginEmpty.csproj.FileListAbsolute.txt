@@ -1,0 +1,2 @@
+D:\kevin\Documents\GitHub\TS3QueryLibRainmeter\PluginEmpty\x32\Release\RainTS3.dll
+D:\kevin\Documents\GitHub\TS3QueryLibRainmeter\PluginEmpty\obj\x86\Release\RainTS3.dll

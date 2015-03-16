@@ -141,7 +141,7 @@ namespace TS3QueryLib.Core
             }
             catch (Exception e)
             {
-                //throws objectdisposed exceptions added NullReference exception for testing
+                //throws objectdisposed exceptions
                 if (e is ObjectDisposedException)
                 {
 
@@ -424,8 +424,10 @@ namespace TS3QueryLib.Core
 
         private void OnServerClosedConnection(object state)
         {
+            //sometimes this gives null pointer exceptions
             if (ServerClosedConnection != null)
-                SyncContext.Post(sender => ServerClosedConnection(sender, EventArgs.Empty), this);
+                ServerClosedConnection(new Object(), EventArgs.Empty);
+                //SyncContext.Post(sender => ServerClosedConnection(sender, EventArgs.Empty), this);
         }
 
         private void OnReadyForSendingCommands()

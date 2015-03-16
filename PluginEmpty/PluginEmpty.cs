@@ -27,8 +27,8 @@ namespace PluginEmpty
         public static TeamspeakConnectionThread teamspeakConnection = new TeamspeakConnectionThread();
         private System.Timers.Timer retryTimer = new System.Timers.Timer(5000);
         //private string ReturnValue;
-        private static string channelName = "not connected";
-        private static string clients = "", talking = "", message = "";
+        //private static string channelName = "not connected";
+        //private static string clients = "", talking = "", message = "";
 
         internal Measure()
         {
@@ -41,24 +41,24 @@ namespace PluginEmpty
         internal void Reload(Rainmeter.API api, ref double maxValue)
         {
             SkinHandle = api.GetSkin();
-            
-
-            if (teamspeakConnection.Connected != TeamspeakConnectionThread.ConnectionState.Connected)
+            if (teamspeakConnection.Connected == TeamspeakConnectionThread.ConnectionState.Disconnected)
             {
-                if (teamspeakConnection.Connected != TeamspeakConnectionThread.ConnectionState.Connecting)
+                if (teamspeakConnection.ConnectionThread == null || teamspeakConnection.ConnectionThread.ThreadState == ThreadState.Stopped)
                 {
-                    if (teamspeakConnection.ConnectionThread == null || teamspeakConnection.ConnectionThread.ThreadState == ThreadState.Stopped)
+                    if (!retryTimer.Enabled)
                     {
-                        if (!retryTimer.Enabled)
-                        {
-                            retryTimer.Start();
-                        }
+                        retryTimer.Start();
+                        API.Log(API.LogType.Debug, "Teamspeak.ddl: Retry timer started");
                     }
                 }
                 else
                 {
-                    //channelName = "connecting";
+                    API.Log(API.LogType.Debug, "Teamspeak.ddl: Reload, ConnectionThread is running");
                 }
+            }
+            else
+            {
+                API.Log(API.LogType.Debug, "Teamspeak.ddl: Reload, ConnectionThread is running and connected");
             }
             
             
@@ -86,17 +86,16 @@ namespace PluginEmpty
             {
                 if (teamspeakConnection.ConnectionThread == null || teamspeakConnection.ConnectionThread.ThreadState == ThreadState.Stopped)
                 {
-                    if (TeamspeakConnectionThread.QueryDispatcher != null)
-                    {
-                        
-                    }
                     teamspeakConnection.startThread();
                     API.Log(API.LogType.Debug, "Teamspeak.ddl: Start new thread");
+                    retryTimer.Stop();
+                    API.Log(API.LogType.Debug, "Teamspeak.ddl: Retry timer stopped");
                 }
             }
             else
             {
                 retryTimer.Stop();
+                API.Log(API.LogType.Debug, "Teamspeak.ddl: Retry timer stopped");
             }
         }
         

@@ -32,8 +32,11 @@ namespace PluginEmpty
 
         public void startThread()
         {
-            ConnectionThread = new Thread(Connect);
-            ConnectionThread.Start();
+            if(ConnectionThread == null || ConnectionThread.ThreadState == ThreadState.Stopped)
+            {
+                ConnectionThread = new Thread(Connect);
+                ConnectionThread.Start();
+            }
         }
         
         public IntPtr SkinHandle;
@@ -67,36 +70,26 @@ namespace PluginEmpty
 
         private void Connect()
         {
-            try
+            API.Log(API.LogType.Debug, "Teamspeak.ddl: Connecting");
+            // do not connect when already connected or during connection establishing
+            if (QueryDispatcher != null)
             {
-                API.Log(API.LogType.Debug, "Teamspeak.ddl: Connecting");
-                // do not connect when already connected or during connection establishing
-                if (QueryDispatcher != null)
-                {
-                    API.Log(API.LogType.Debug, "Teamspeak.ddl: QueryDispatcher not null");
-                    return;
-                }
-                lock (ThreadLocker)
-                {
-                    Connected = ConnectionState.Connecting;
-                    QueryDispatcher = new AsyncTcpDispatcher("localhost", 25639);
-                    QueryDispatcher.BanDetected += QueryDispatcher_BanDetected;
-                    QueryDispatcher.ReadyForSendingCommands += QueryDispatcher_ReadyForSendingCommands;
-                    QueryDispatcher.ServerClosedConnection += QueryDispatcher_ServerClosedConnection;
-                    QueryDispatcher.SocketError += QueryDispatcher_SocketError;
-                    QueryDispatcher.NotificationReceived += QueryDispatcher_NotificationReceived;
-                    API.Log(API.LogType.Debug, "Teamspeak.ddl: linked events");
-                    QueryDispatcher.Connect();
-                    Keep_Alive_Timer.Start();
-                }
-                
+                API.Log(API.LogType.Debug, "Teamspeak.ddl: QueryDispatcher not null");
+                return;
             }
-            catch (Exception e)
+            lock (ThreadLocker)
             {
-                API.Log(API.LogType.Error, "Teamspeak.ddl: "+e.Message);
-                Disconnect();
+                Connected = ConnectionState.Connecting;
+                QueryDispatcher = new AsyncTcpDispatcher("localhost", 25639);
+                QueryDispatcher.BanDetected += QueryDispatcher_BanDetected;
+                QueryDispatcher.ReadyForSendingCommands += QueryDispatcher_ReadyForSendingCommands;
+                QueryDispatcher.ServerClosedConnection += QueryDispatcher_ServerClosedConnection;
+                QueryDispatcher.SocketError += QueryDispatcher_SocketError;
+                QueryDispatcher.NotificationReceived += QueryDispatcher_NotificationReceived;
+                API.Log(API.LogType.Debug, "Teamspeak.ddl: linked events");
+                QueryDispatcher.Connect();
+                Keep_Alive_Timer.Start();
             }
-
         }
 
         
@@ -104,11 +97,12 @@ namespace PluginEmpty
         {
             lock (ThreadLocker)
             {
-                ChannelClients = "";
+                StringBuilder clients = new StringBuilder();
                 foreach (ClientListEntry channelclient in ChannelClientList)
                 {
-                    ChannelClients += channelclient.Nickname + Environment.NewLine;
+                    clients.AppendLine(channelclient.Nickname);
                 }
+                ChannelClients = clients.ToString();
             }
         }
 
@@ -129,19 +123,18 @@ namespace PluginEmpty
                 lock (ThreadLocker)
                 {
                     ChannelClientList = new List<ClientListEntry>();
-                    ChannelClients = "";
+                    StringBuilder channelcl = new StringBuilder();
                     foreach (ClientListEntry client in clients.Values)
                     {
                         if (client.ChannelId == currentUser.ChannelId)
                         {
                             ChannelClientList.Add(client);
-                            ChannelClients += (client.Nickname + Environment.NewLine);
+                            channelcl.AppendLine(client.Nickname);
                         }
                     }
+                    ChannelClients = channelcl.ToString();
 
                 }
-
-
                 API.Log(API.LogType.Debug, "Teamspeak.ddl: UpdateOutput" + "\r\n" + ChannelName + "\r\n" + ChannelClients);
             }
             else
@@ -154,21 +147,21 @@ namespace PluginEmpty
 
         public void Disconnect()
         {
-            // QueryRunner disposes the Dispatcher too
-            //if (QueryRunner != null)
-            //    QueryRunner.Dispose();
-            if (QueryDispatcher != null)
+            lock (ThreadLocker)
             {
-                QueryDispatcher.Disconnect();
-                QueryDispatcher.DetachAllEventListeners();
-            }
+                if (QueryDispatcher != null)
+                {
+                    QueryDispatcher.Disconnect();
+                    QueryDispatcher.DetachAllEventListeners();
+                }
 
-            //clear values
-            ClearValues();
-            QueryDispatcher = null;
-            QueryRunner = null;
-            Connected = ConnectionState.Disconnected;
-            Retry_Connection_Timer.Start();
+                //clear values
+                ClearValues();
+                QueryDispatcher = null;
+                QueryRunner = null;
+                Connected = ConnectionState.Disconnected;
+                Retry_Connection_Timer.Start();
+            }
         }
 
         /// <summary>
@@ -329,59 +322,13 @@ namespace PluginEmpty
 
         }
         /// <summary>
-        /// Removes brackets and text between it
-        /// </summary>
-        /// <param name="message">string to remove the brackets from</param>
-        /// <returns></returns>
-        private string ClearMessage(string message)
-        {
-            StringBuilder sb = new StringBuilder(message);
-
-            int counter = 0;
-            int pos = 0;
-            int size = 0;
-            char current = '\0';
-            for (int i = 0; i < message.Length; i++)
-            {
-                current = message[i];
-                if (current == '[')
-                {
-                    if (counter < 1)
-                    {
-                        pos += i;
-                    }
-                    counter++;
-                }
-                if (current == ']')
-                {
-                    if (counter > 0)
-                    {
-                        if (counter == 1)
-                        {
-                            sb.Remove(pos, ++size);
-                            pos = 0-size;
-                            counter = 0;
-                            size = 0;
-                        }
-                        else
-                        {
-                            counter--;
-                        }
-                    }
-                }
-                if (counter > 0)
-                    size++;
-            }
-                return sb.ToString();
-        }
-        /// <summary>
         /// Event MessageReceived
         /// Will change TextMessage to "nickname: message"
         /// starts a timer that will clear the message after 1 minute
         /// </summary>
         private void Notifications_MessageReceived(object sender, TS3QueryLib.Core.Server.Notification.EventArgs.MessageReceivedEventArgs e)
         {
-            TextMessage = e.InvokerNickname + ":\r\n" + ClearMessage(e.Message);
+            TextMessage = e.InvokerNickname + ":\r\n" + e.Message;
             chatTimer.Start();
         }
 
@@ -453,6 +400,8 @@ namespace PluginEmpty
         {
             lock (ThreadLocker)
             {
+                StringBuilder debugchannels = new StringBuilder();
+                StringBuilder debugTalking = new StringBuilder();
                 API.Log(API.LogType.Debug, "Teamspeak.ddl: ChannelTalkStatusEvent"+e.ClientId+" "+e.TalkStatus);
                 if (talking.ContainsKey(e.ClientId))
                 {
@@ -470,18 +419,22 @@ namespace PluginEmpty
                             {
                                 talking.Add(e.ClientId, cle.Nickname);
                                 found = true;
+                                debugchannels.AppendLine(cle.ClientId + ":" + cle.Nickname);
                                 break;
                             }
                         }
                     }
+                    else { found = true; }
                     if (!found)
                     {
                         //this means someone in your channel is not in the channelClientList but is talking
                         //-> ChannelClientList is not complete
-                        API.Log(API.LogType.Debug, "Teamspeak.ddl: Talking client not in ChannelList");
+                            
+                        API.Log(API.LogType.Debug, "Teamspeak.ddl: Talking client not in ChannelList " + e.ClientId +"\r\n"+debugchannels.ToString());
+
                         if (ThreadPool.QueueUserWorkItem(new WaitCallback(updateOutput)))
                         {
-                            API.Log(API.LogType.Debug, "Teamspeak.ddl: Talking UpdateOutput queued");
+                            API.Log(API.LogType.Debug, "Teamspeak.ddl: Talking UpdateOutput queued, searching for phantom user");
                         }
                         else
                         {

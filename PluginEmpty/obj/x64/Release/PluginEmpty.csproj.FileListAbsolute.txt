@@ -1,0 +1,3 @@
+D:\kevin\Documents\GitHub\TS3QueryLibRainmeter\PluginEmpty\x64\Release\RainTS3.dll
+D:\kevin\Documents\GitHub\TS3QueryLibRainmeter\PluginEmpty\obj\x64\Release\PluginEmpty.csprojResolveAssemblyReference.cache
+D:\kevin\Documents\GitHub\TS3QueryLibRainmeter\PluginEmpty\obj\x64\Release\RainTS3.dll
