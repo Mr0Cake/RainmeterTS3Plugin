@@ -172,14 +172,8 @@ namespace TS3QueryLib.Core
         protected void OnNotificationReceived(object notificationText)
         {
             if (NotificationReceived != null)
-                try
-                {
-                    SyncContext.Post(p => NotificationReceived(((object[])p)[0], new EventArgs<string>(Convert.ToString(((object[])p)[1]))), new[] { this, notificationText });
-                }
-                catch (Exception)
-                {
-
-                }
+                SyncContext.Post(p => NotificationReceived(((object[])p)[0], new EventArgs<string>(Convert.ToString(((object[])p)[1]))), new[] { this, notificationText });
+               
         }
 
         protected void OnBanDetected(object banResponse)
