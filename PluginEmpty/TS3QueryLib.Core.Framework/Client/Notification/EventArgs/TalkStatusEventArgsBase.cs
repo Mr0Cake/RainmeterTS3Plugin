@@ -1,6 +1,7 @@
 ﻿using TS3QueryLib.Core.Common;
 using TS3QueryLib.Core.CommandHandling;
 using TS3QueryLib.Core.Client.Notification.Enums;
+using System;
 
 namespace TS3QueryLib.Core.Client.Notification.EventArgs
 {
@@ -18,9 +19,11 @@ namespace TS3QueryLib.Core.Client.Notification.EventArgs
 
         protected TalkStatusEventArgsBase(CommandParameterGroupList commandParameterGroupList)
         {
-            ServerConnectionHandlerId = commandParameterGroupList.GetParameterValue<uint>("schandlerid");
-            TalkStatus = (TalkStatus) commandParameterGroupList.GetParameterValue<byte>("status");
-            ClientId = commandParameterGroupList.GetParameterValue<uint>("clid");
+
+                ServerConnectionHandlerId = commandParameterGroupList.GetParameterValue<uint>("schandlerid");
+                TalkStatus = (TalkStatus)commandParameterGroupList.GetParameterValue<byte>("status");
+                ClientId = commandParameterGroupList.GetParameterValue<uint>("clid");
+
         }
 
         #endregion

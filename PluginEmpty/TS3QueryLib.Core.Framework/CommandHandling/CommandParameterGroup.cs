@@ -83,10 +83,18 @@ namespace TS3QueryLib.Core.CommandHandling
             {
                 throw;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
+                if (targetType == typeof(uint))
+                {
+                    return (T)(object)(uint)0;
+                }
+                else
+                {
+                    return (T)(object)(string)"";
+                }
                 
-                throw new InvalidCastException(string.Format("Could not cast parameter with name '{0}' and value '{1}' to target type of '{2}'.", parameterName, parameterValue, targetType), ex);
+                //throw new InvalidCastException(string.Format("Could not cast parameter with name '{0}' and value '{1}' to target type of '{2}'.", parameterName, parameterValue, targetType), ex);
             }
         }
     }
