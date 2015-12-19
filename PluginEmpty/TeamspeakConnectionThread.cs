@@ -66,7 +66,7 @@ namespace PluginEmpty
         public ListResponse<ChannelListEntry> channels { get; set; }
         public ListResponse<ClientListEntry> clients { get; set; }
 
-        private List<ClientListEntry> ChannelClientList { get; set; }
+        private Dictionary<uint, ClientListEntry> ChannelClientList { get; set; }
 
         private void Connect()
         {
@@ -98,9 +98,18 @@ namespace PluginEmpty
             lock (ThreadLocker)
             {
                 StringBuilder clients = new StringBuilder();
-                foreach (ClientListEntry channelclient in ChannelClientList)
+                int i = 0;
+                foreach (KeyValuePair<uint, ClientListEntry> channelclientkvp in ChannelClientList)
                 {
-                    clients.AppendLine(channelclient.Nickname);
+                    clients.AppendLine(channelclientkvp.Value.Nickname);
+                    if (i < 15)
+                    {
+                        i++;
+                    }
+                    else
+                    {
+                        break;
+                    }
                 }
                 ChannelClients = clients.ToString();
             }
@@ -122,24 +131,24 @@ namespace PluginEmpty
 
                 lock (ThreadLocker)
                 {
-                    ChannelClientList = new List<ClientListEntry>();
+                    ChannelClientList = new Dictionary<uint, ClientListEntry>();
                     StringBuilder channelcl = new StringBuilder();
                     foreach (ClientListEntry client in clients.Values)
                     {
                         if (client.ChannelId == currentUser.ChannelId)
                         {
-                            ChannelClientList.Add(client);
+                            ChannelClientList.Add(client.ClientId,client);
                             channelcl.AppendLine(client.Nickname);
                         }
                     }
                     ChannelClients = channelcl.ToString();
 
                 }
-                API.Log(API.LogType.Debug, "Teamspeak.ddl: UpdateOutput" + "\r\n" + ChannelName + "\r\n" + ChannelClients);
+                //API.Log(API.LogType.Debug, "Teamspeak.ddl: UpdateOutput" + "\r\n" + ChannelName + "\r\n" + ChannelClients);
             }
             else
             {
-                API.Log(API.LogType.Debug, "Teamspeak.ddl: UpdateOutput CurrentUser Error");
+                //API.Log(API.LogType.Debug, "Teamspeak.ddl: UpdateOutput CurrentUser Error");
                 Disconnect();
             }
         }
@@ -173,7 +182,7 @@ namespace PluginEmpty
             ChannelClients = "";
             WhoIsTalking = "";
             TextMessage = "";
-            ChannelClientList = new List<ClientListEntry>();
+            ChannelClientList = new Dictionary<uint,ClientListEntry>();
             talking.Clear();
         }
 
@@ -223,7 +232,7 @@ namespace PluginEmpty
             if (Connected == ConnectionState.Connected && !(currentUser = QueryRunner.SendWhoAmI()).IsErroneous)
             {
                 currentUser = QueryRunner.SendWhoAmI();
-                API.Log(API.LogType.Debug, "Teamspeak.ddl: server_keep_alive_message");
+                //API.Log(API.LogType.Debug, "Teamspeak.ddl: server_keep_alive_message");
 
             }
             else
@@ -280,9 +289,8 @@ namespace PluginEmpty
         {
             lock (ThreadLocker)
             {
-                API.Log(API.LogType.Debug, "Teamspeak.ddl: ClientMoved Event - "+e.ClientId+" "+e.TargetChannelId);
-                bool remove = false;
-                ClientListEntry toRemove = null;
+
+               // API.Log(API.LogType.Debug, "Teamspeak.ddl: ClientMoved Event - " + e.ClientId + " " + e.TargetChannelId);
                 if (currentUser.ClientId == e.ClientId || e.TargetChannelId == currentUser.ChannelId )
                 {
                     if (ThreadPool.QueueUserWorkItem(new WaitCallback(updateOutput)))
@@ -298,25 +306,19 @@ namespace PluginEmpty
                 }
                 else
                 {
-                    foreach (ClientListEntry channeluser in ChannelClientList)
+                    if (ChannelClientList.ContainsKey(e.ClientId))
                     {
-                        if (e.ClientId == channeluser.ClientId)
+                        //event clientID is in channelClientList cache
+                        if (e.TargetChannelId != currentUser.ChannelId)
                         {
-                            API.Log(API.LogType.Debug, "Teamspeak.ddl: ClientMoved - Client is in channel");
-                            if (e.TargetChannelId != currentUser.ChannelId)
-                            {
-                                remove = true;
-                                toRemove = channeluser;
-                            }
-                            break;
+                            //event client ID left your channel, remove from cache
+                            ChannelClientList.Remove(e.ClientId);
+                            //API.Log(API.LogType.Debug, "Teamspeak.ddl: ClientMoved Event - " + e.ClientId + " removed , count:"+ChannelClientList.Count);
+                            updateChannelClientsStringOutput();
                         }
                     }
-                    if (remove)
-                    {
-                        API.Log(API.LogType.Debug, "Teamspeak.ddl: ClientMoved - ClientRemoved: " + toRemove.Nickname);
-                        ChannelClientList.Remove(toRemove);
-                        updateChannelClientsStringOutput();
-                    }
+                    
+
                 }
             }
 
@@ -402,44 +404,38 @@ namespace PluginEmpty
             {
                 StringBuilder debugchannels = new StringBuilder();
                 StringBuilder debugTalking = new StringBuilder();
-                API.Log(API.LogType.Debug, "Teamspeak.ddl: ChannelTalkStatusEvent"+e.ClientId+" "+e.TalkStatus);
-                if (talking.ContainsKey(e.ClientId))
+                //API.Log(API.LogType.Debug, "Teamspeak.ddl: ChannelTalkStatusEvent" + e.ClientId + " " + e.TalkStatus);
+                bool found = talking.ContainsKey(e.ClientId);
+                if (found)
                 {
                     if (e.TalkStatus == TalkStatus.TalkFinished)
                         talking.Remove(e.ClientId);
                 }
                 else
                 {
-                    bool found = false;
                     if (e.TalkStatus == TalkStatus.TalkStarted)
                     {
-                        foreach (ClientListEntry cle in ChannelClientList)
+                        if (ChannelClientList.ContainsKey(e.ClientId))
                         {
-                            if (e.ClientId == cle.ClientId)
-                            {
-                                talking.Add(e.ClientId, cle.Nickname);
-                                found = true;
-                                debugchannels.AppendLine(cle.ClientId + ":" + cle.Nickname);
-                                break;
-                            }
-                        }
-                    }
-                    else { found = true; }
-                    if (!found)
-                    {
-                        //this means someone in your channel is not in the channelClientList but is talking
-                        //-> ChannelClientList is not complete
-                            
-                        API.Log(API.LogType.Debug, "Teamspeak.ddl: Talking client not in ChannelList " + e.ClientId +"\r\n"+debugchannels.ToString());
-
-                        if (ThreadPool.QueueUserWorkItem(new WaitCallback(updateOutput)))
-                        {
-                            API.Log(API.LogType.Debug, "Teamspeak.ddl: Talking UpdateOutput queued, searching for phantom user");
+                            talking.Add(e.ClientId, ChannelClientList[e.ClientId].Nickname);
                         }
                         else
                         {
-                            API.Log(API.LogType.Debug, "Teamspeak.ddl: Talking Failed to queue UpdateOutput");
+                            //this means someone in your channel is not in the channelClientList but is talking
+                            //-> ChannelClientList is not complete
+
+                            API.Log(API.LogType.Debug, "Teamspeak.ddl: Talking client not in ChannelList " + e.ClientId + "\r\n" + debugchannels.ToString());
+
+                            if (ThreadPool.QueueUserWorkItem(new WaitCallback(updateOutput)))
+                            {
+                                API.Log(API.LogType.Debug, "Teamspeak.ddl: Talking UpdateOutput queued, searching for phantom user");
+                            }
+                            else
+                            {
+                                API.Log(API.LogType.Debug, "Teamspeak.ddl: Talking Failed to queue UpdateOutput");
+                            }
                         }
+                        
                     }
                 }
 
@@ -453,6 +449,65 @@ namespace PluginEmpty
             }
 
         }
+        //private void Notifications_ChannelTalkStatusChanged(object sender, TalkStatusEventArgsBase e)
+        //{
+        //    lock (ThreadLocker)
+        //    {
+        //        StringBuilder debugchannels = new StringBuilder();
+        //        StringBuilder debugTalking = new StringBuilder();
+        //        API.Log(API.LogType.Debug, "Teamspeak.ddl: ChannelTalkStatusEvent" + e.ClientId + " " + e.TalkStatus);
+        //        bool found = talking.ContainsKey(e.ClientId);
+        //        if (found)
+        //        {
+        //            if (e.TalkStatus == TalkStatus.TalkFinished)
+        //                talking.Remove(e.ClientId);
+
+        //        }
+        //        else
+        //        {
+                    
+        //            if (e.TalkStatus == TalkStatus.TalkStarted)
+        //            {
+        //                foreach (ClientListEntry cle in ChannelClientList)
+        //                {
+        //                    if (e.ClientId == cle.ClientId)
+        //                    {
+        //                        talking.Add(e.ClientId, cle.Nickname);
+        //                        found = true;
+        //                        debugchannels.AppendLine(cle.ClientId + ":" + cle.Nickname);
+        //                        break;
+        //                    }
+        //                }
+        //            }
+        //            else { found = true; }
+        //            if (!found)
+        //            {
+        //                //this means someone in your channel is not in the channelClientList but is talking
+        //                //-> ChannelClientList is not complete
+
+        //                API.Log(API.LogType.Debug, "Teamspeak.ddl: Talking client not in ChannelList " + e.ClientId + "\r\n" + debugchannels.ToString());
+
+        //                if (ThreadPool.QueueUserWorkItem(new WaitCallback(updateOutput)))
+        //                {
+        //                    API.Log(API.LogType.Debug, "Teamspeak.ddl: Talking UpdateOutput queued, searching for phantom user");
+        //                }
+        //                else
+        //                {
+        //                    API.Log(API.LogType.Debug, "Teamspeak.ddl: Talking Failed to queue UpdateOutput");
+        //                }
+        //            }
+        //        }
+
+
+        //        WhoIsTalking = "";
+
+        //        foreach (KeyValuePair<uint, string> kvp in talking)
+        //        {
+        //            WhoIsTalking += kvp.Value + " ";
+        //        }
+        //    }
+
+        //}
 #endregion
 
 

@@ -105,11 +105,11 @@ namespace PluginEmpty
         internal string GetString()
         {
             //API.Log(API.LogType.Debug, "Teamspeak.ddl: output2=\r\n" + channelName + "\r\n" + clients + "\r\n" + message + "\r\n" + talking);
-            return teamspeakConnection.ChannelName + "\r\n\r\n" +
-                teamspeakConnection.ChannelClients + "\r\n" +
-                teamspeakConnection.WhoIsTalking + "\r\n\r\n" +
-                teamspeakConnection.TextMessage;
-            
+            return  teamspeakConnection.ChannelName     + "\r\n\r\n" +
+                    teamspeakConnection.WhoIsTalking    + "\r\n\r\n" +
+                    teamspeakConnection.TextMessage     + "\r\n" +
+                    teamspeakConnection.ChannelClients  + "\r\n" 
+                ;
             
         }
 #endif

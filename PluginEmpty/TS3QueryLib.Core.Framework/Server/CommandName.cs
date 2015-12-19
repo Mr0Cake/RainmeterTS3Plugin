@@ -82,6 +82,7 @@ namespace TS3QueryLib.Core.Server
         ClientPermList,
         ClientAddPerm,
         ClientDelPerm,
+        ClientVariable,
         ChannelClientPermList,
         ChannelClientAddPerm,
         ChannelClientDelPerm,
